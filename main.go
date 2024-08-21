@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -51,17 +52,28 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Request received")
 }
 
-func main() {
-	fmt.Println("Hello, World!")
-	OriginalUrl := "https://github.com/Srujangv05"
-	generateShortUrl(OriginalUrl)
+func shortUrlHandler(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		URL string `json:"url"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	shortUrl := createURL(data.URL)
+	fmt.Fprintf(w, shortUrl)
+}
+
+func main() {
 	// Register Handler
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/shorten", shortUrlHandler)
 
 	// Start server
-	fmt.Println("Starting server on port 8080")
-	err := http.ListenAndServe(":8080", nil)
+	fmt.Println("Starting server on port 3000")
+	err := http.ListenAndServe(":3000", nil)
 	if err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
